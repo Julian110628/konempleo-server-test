@@ -37,7 +37,7 @@ services:
 
     # aquí sigues usando tu .env del backend
     env_file:
-      - ./backend/.env
+      - ../app/.env
 
     environment:
       # DB (igual que tenías)
