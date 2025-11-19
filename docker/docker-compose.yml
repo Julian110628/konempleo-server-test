@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   nginx:
     image: nginx:alpine
@@ -32,15 +34,25 @@ services:
   backend:
     build: ./backend
     container_name: backend
+
+    # aquí sigues usando tu .env del backend
     env_file:
       - ./backend/.env
+
     environment:
+      # DB (igual que tenías)
       - DATABASE_URL=postgresql://konempleo:konempleo_pw@db:5432/konempleo
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=konempleo
       - DB_USER=konempleo
       - DB_PASSWORD=konempleo_pw
+
+      # 🔹 AWS S3 usando IAM Role (SIN keys)
+      - AWS_REGION=us-east-2
+      - AWS_S3_BUCKET=konempleo-prod-bucket
+      - AWS_S3_PRESIGN_EXPIRATION=900
+
     depends_on:
       - db
     expose:
