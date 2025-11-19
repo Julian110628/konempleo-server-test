@@ -22,7 +22,20 @@ user_enum = ENUM('super_admin', 'admin', 'company', 'company_recruit', 'integrat
 def upgrade():
     # Add the new value to the enum
     with op.get_context().autocommit_block():
-        op.execute("ALTER TYPE userenum ADD VALUE 'integrations'")
+        op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM pg_enum e
+            JOIN pg_type t ON e.enumtypid = t.oid
+            WHERE t.typname = 'userenum'
+              AND e.enumlabel = 'integrations'
+        ) THEN
+            ALTER TYPE userenum ADD VALUE 'integrations';
+        END IF;
+    END$$;
+    """)
 
 def downgrade():
     pass
