@@ -8,6 +8,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - /var/www/konempleo:/usr/share/nginx/html:ro
     depends_on:
       - backend
     restart: always
