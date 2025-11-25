@@ -25,99 +25,151 @@ S3_BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 @companyRouter.post("/company/", status_code=201, response_model=Company)
 def create_company(
-    *, company_in: str = Form(...), 
+    *,
+    company_in: str = Form(...),
     picture: Optional[UploadFile] = File(None),
-    db: Session = Depends(deps.get_db), userToken: UserToken = Depends(get_user_current)
+    db: Session = Depends(deps.get_db),
+    userToken: UserToken = Depends(get_user_current),
 ) -> dict:
     """
-    Create a new company in the database and also create a responsible user with type 3 (company).
-    Sends an email with a temporary password.
-    If email sending fails, the company and user are NOT created.
-    """
-    company_create = json.loads(company_in)  # Parse the form-data string into a dictionary
-    company_in = CompanyCreate(**company_create)
+    Crea una empresa y el usuario responsable (rol company).
+    - Crea usuario responsable con password temporal.
+    - Valida que el konempleo_responsible exista.
+    - Crea la empresa.
+    - Crea relaciones en CompanyUser.
+    - Intenta enviar el mail con la contraseña temporal (NO rompe si falla).
+    - Intenta subir logo a S3 (NO rompe si falla).
 
-    if userToken.role not in [UserEnum.super_admin, UserEnum.admin]:
-        raise HTTPException(status_code=403, detail="No tiene los permisos para ejecutar este servicio")
-    
-    activeState = userToken.role == UserEnum.super_admin
+    Versión "fuerte": agrega contexto de etapa en errores 500 para debug.
+    """
+
+    debug_ctx = {"stage": "start"}
 
     try:
-        # Step 1: Generate a temporary password for the responsible user
+        debug_ctx["stage"] = "parse_company_payload"
+        # company_in viene como string en form-data → parseamos a dict
+        raw_company = json.loads(company_in)
+        company_data = CompanyCreate(**raw_company)
+
+        debug_ctx["stage"] = "auth_check"
+        # Solo admin / super_admin pueden crear empresas
+        if userToken.role not in [UserEnum.super_admin, UserEnum.admin]:
+            raise HTTPException(
+                status_code=403,
+                detail="No tiene los permisos para ejecutar este servicio",
+            )
+
+        # super_admin crea empresas activas, admin las deja inactivas
+        active_state = userToken.role == UserEnum.super_admin
+
+        debug_ctx["stage"] = "create_responsible_user"
+        # 1) Usuario responsable (rol company)
         temp_password = generate_temp_password()
         hashed_password = get_password_hash(temp_password)
 
-        # Step 2: Insert responsible_user (DO NOT COMMIT YET)
         user = Users(
-            fullname=company_in.responsible_user.fullname,
-            email=company_in.responsible_user.email,
-            password=hashed_password,  # Store the hashed password
-            phone=company_in.responsible_user.phone,
-            role=3  # Assuming this is the "company" user role
+            fullname=company_data.responsible_user.fullname,
+            email=company_data.responsible_user.email,
+            password=hashed_password,
+            phone=company_data.responsible_user.phone,
+            role=UserEnum.company,
         )
         db.add(user)
-        db.flush()
+        db.flush()  # para tener user.id
 
-        # Step 3: Validate konempleo_responsible
-        konempleo_user = db.query(Users).filter(Users.id == company_in.konempleo_responsible).first()
+        debug_ctx["stage"] = "validate_konempleo_responsible"
+        # 2) Validar konempleo_responsible
+        konempleo_user = (
+            db.query(Users)
+            .filter(Users.id == company_data.konempleo_responsible)
+            .first()
+        )
         if not konempleo_user:
             db.rollback()
-            raise HTTPException(status_code=404, detail="Konempleo responsible user not found.")
+            raise HTTPException(
+                status_code=404,
+                detail="Konempleo responsible user not found.",
+            )
 
-        # Step 4: Prepare and insert company data
-        company_data = company_in.dict()
-        company_data.pop('konempleo_responsible', None)
-        company_data.pop('responsible_user', None)
+        if konempleo_user.role not in [UserEnum.admin, UserEnum.super_admin]:
+            db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="Konempleo responsible must be an admin user.",
+            )
 
-        company = CompanyModel(**company_data)
-        company.active = activeState
+        debug_ctx["stage"] = "create_company_model"
+        # 3) Preparar data de la empresa
+        company_dict = company_data.dict()
+        company_dict.pop("konempleo_responsible", None)
+        company_dict.pop("responsible_user", None)
+
+        company = CompanyModel(**company_dict)
+        company.active = active_state
 
         db.add(company)
-        db.flush()
+        db.flush()  # company.id
 
-        # Step 5: Insert company-user relationships
-        company_user = CompanyUser(
-            companyId=company.id,
-            userId=user.id
-        )
+        debug_ctx["stage"] = "create_company_user_relations"
+        # 4) Relaciones company-user
+        company_user = CompanyUser(companyId=company.id, userId=user.id)
         konempleo_user_relation = CompanyUser(
-            companyId=company.id,
-            userId=konempleo_user.id
+            companyId=company.id, userId=konempleo_user.id
         )
         db.add(company_user)
         db.add(konempleo_user_relation)
 
-        # Step 6: Send the email BEFORE committing
-        try:
-            send_email_with_temp_password(user.email, temp_password)
-        except Exception as email_error:
-            db.rollback()  # Rollback user and company creation if email fails
-            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(email_error)}")
-
-        # Step 7: Commit transaction ONLY if email sending was successful
+        debug_ctx["stage"] = "commit_before_side_effects"
+        # 5) Commit de todo lo anterior (sin side effects externos)
         db.commit()
         db.refresh(company)
 
-        # Step 8: Upload picture to S3 after the company is committed
+        debug_ctx["stage"] = "send_email_with_temp_password"
+        # 6) Intentar enviar email (NO rompemos si falla, solo log)
+        try:
+            send_email_with_temp_password(user.email, temp_password)
+        except Exception as email_error:
+            # Log fuerte para debug, pero no rompemos la creación
+            print(
+                f"[WARN] Failed to send temp password email "
+                f"to {user.email}: {email_error}"
+            )
+            traceback.print_exc()
+
+        debug_ctx["stage"] = "upload_picture_to_s3"
+        # 7) Intentar subir logo a S3 (NO rompe si falla)
         if picture:
             try:
-                picture_url = upload_picture_to_s3(picture, company_in.name)
+                picture_url = upload_picture_to_s3(picture, company_data.name)
                 company.picture = picture_url
-                db.commit()  # Commit the update to store the picture URL
+                db.commit()
             except Exception as e:
-                print(f"Warning: Failed to upload picture to S3. Reason: {str(e)}")
+                print(
+                    f"[WARN] Failed to upload picture to S3 for company "
+                    f"{company_data.name}: {e}"
+                )
+                traceback.print_exc()
+                # NO hacemos rollback, solo dejamos la empresa sin logo
 
+        debug_ctx["stage"] = "return_company"
         return company
 
-    except HTTPException as e:
-        db.rollback()
-        raise e  # Re-raise the HTTPException to return the correct response
-    
+    except HTTPException:
+        # Errores controlados se pasan tal cual
+        raise
     except Exception as e:
+        # Cualquier error inesperado → rollback + detalle con etapa
         db.rollback()
-        print(f"Error occurred in create_company function: {str(e)}")
+        print(
+            f"[ERROR] Unexpected error in create_company at stage "
+            f"{debug_ctx.get('stage')}: {e}"
+        )
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="An error occurred while creating the company.")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error inesperado al crear la compañía "
+                   f"(stage={debug_ctx.get('stage')}): {str(e)}",
+        )
 
     
 @companyRouter.put("/company/{company_id}", response_model=Company)
