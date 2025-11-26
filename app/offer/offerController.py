@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from requests import Session
 from sqlalchemy import case, func
@@ -18,6 +18,7 @@ offerRouter.tags = ['Offer']
 @offerRouter.post("/offers/", response_model=Offer)
 def create_offer(
     offer_in: OfferCreateDTO,
+    skills: Optional[List[Union[int, str]]] = None,
     db: Session = Depends(get_db),
     userToken: UserToken = Depends(get_user_current),
 ):
@@ -51,34 +52,31 @@ def create_offer(
     try:
         # Create the Offer
         new_offer = OfferModel(**offer_data)
-        new_offer.offer_owner = userToken.id  # Associate the user as offer_owner
-        db.add(new_offer)
-        db.flush()  # Flush to get the new offer's ID
+        new_offer.offer_owner = userToken.id
 
-        # Normalizar skills desde el DTO (acepta int, numeric string o nombre)
-        raw_skills = offer_in.skills or []
+        db.add(new_offer)
+        db.flush()
+
+        # Normalizar skills usando el parámetro 'skills' (acepta int o str)
+        raw_skills = skills or []
         skill_ids: List[int] = []
 
         for raw in raw_skills:
             if raw is None:
                 continue
 
-            # Si ya es int, lo usamos
             if isinstance(raw, int):
                 skill_ids.append(raw)
                 continue
 
-            # Convertimos a string y limpiamos
             s = str(raw).strip()
             if not s:
                 continue
 
-            # Si es string numérica, la convertimos a int
             if s.isdigit():
                 skill_ids.append(int(s))
                 continue
 
-            # Si es texto (nombre), buscamos/creamos en Skill
             skill = (
                 db.query(Skill)
                 .filter(Skill.name.ilike(s))
