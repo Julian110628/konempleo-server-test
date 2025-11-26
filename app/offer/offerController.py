@@ -47,7 +47,11 @@ def create_offer(
 
     # Prepare offer data
     offer_data = offer_in.dict()
-    offer_data.pop('companyId', None)  # Remove companyId, we'll handle this later
+
+    # Estos campos NO existen como columnas directas en Offer,
+    # así que los sacamos antes de instanciar el modelo.
+    offer_data.pop("companyId", None)
+    offer_data.pop("skills", None)
 
     try:
         # Create the Offer
