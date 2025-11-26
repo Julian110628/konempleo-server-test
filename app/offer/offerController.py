@@ -18,7 +18,6 @@ offerRouter.tags = ['Offer']
 @offerRouter.post("/offers/", response_model=Offer)
 def create_offer(
     offer_in: OfferCreateDTO,
-    skills: Optional[List[str]] = None,
     db: Session = Depends(get_db),
     userToken: UserToken = Depends(get_user_current),
 ):
@@ -56,31 +55,44 @@ def create_offer(
         db.add(new_offer)
         db.flush()  # Flush to get the new offer's ID
 
-        # Handle skills as names: buscar por nombre o crear si no existe
-        skill_ids = []
+        # Normalizar skills desde el DTO (acepta int, numeric string o nombre)
+        raw_skills = offer_in.skills or []
+        skill_ids: List[int] = []
 
-        if skills:
-            for raw in skills:
-                name = (raw or "").strip()
-                if not name:
-                    continue
+        for raw in raw_skills:
+            if raw is None:
+                continue
 
-                # Buscar skill por nombre (case-insensitive)
-                skill = (
-                    db.query(Skill)
-                    .filter(Skill.name.ilike(name))
-                    .first()
-                )
+            # Si ya es int, lo usamos
+            if isinstance(raw, int):
+                skill_ids.append(raw)
+                continue
 
-                # Crear skill si no existe
-                if not skill:
-                    skill = Skill(name=name)
-                    db.add(skill)
-                    db.flush()
+            # Convertimos a string y limpiamos
+            s = str(raw).strip()
+            if not s:
+                continue
 
-                skill_ids.append(skill.id)
+            # Si es string numérica, la convertimos a int
+            if s.isdigit():
+                skill_ids.append(int(s))
+                continue
 
-        # Crear relaciones offer_skill
+            # Si es texto (nombre), buscamos/creamos en Skill
+            skill = (
+                db.query(Skill)
+                .filter(Skill.name.ilike(s))
+                .first()
+            )
+
+            if not skill:
+                skill = Skill(name=s)
+                db.add(skill)
+                db.flush()
+
+            skill_ids.append(skill.id)
+
+        # Crear relaciones OfferSkill con los IDs finales
         for sid in skill_ids:
             db.add(OfferSkill(offerId=new_offer.id, skillId=sid))
 

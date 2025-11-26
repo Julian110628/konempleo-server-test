@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel
 from enum import IntEnum
 from datetime import datetime
@@ -38,8 +38,8 @@ class Config:
 # DTO for creating an Offer
 class OfferCreateDTO(OfferBase):
     companyId: int
-    # ahora aceptamos nombres de skills, no IDs
-    skills: Optional[List[str]] = None
+    # ahora aceptamos nombres o ids de skills
+    skills: Optional[List[Union[int, str]]] = None
 
 class OfferWithVitaeCount(OfferBase):
     id: int
