@@ -38,7 +38,8 @@ class Config:
 # DTO for creating an Offer
 class OfferCreateDTO(OfferBase):
     companyId: int
-    pass
+    # ahora aceptamos nombres de skills, no IDs
+    skills: Optional[List[str]] = None
 
 class OfferWithVitaeCount(OfferBase):
     id: int

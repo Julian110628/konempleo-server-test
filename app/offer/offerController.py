@@ -17,10 +17,10 @@ offerRouter.tags = ['Offer']
 
 @offerRouter.post("/offers/", response_model=Offer)
 def create_offer(
-    offer_in: OfferCreateDTO, 
-    skills: List[int], 
-    db: Session = Depends(get_db), 
-    userToken: UserToken = Depends(get_user_current)
+    offer_in: OfferCreateDTO,
+    skills: Optional[List[str]] = None,
+    db: Session = Depends(get_db),
+    userToken: UserToken = Depends(get_user_current),
 ):
     """
     Create a new offer and associate it with the provided skills and the offer owner.
@@ -56,14 +56,33 @@ def create_offer(
         db.add(new_offer)
         db.flush()  # Flush to get the new offer's ID
 
-        # Associate skills with the offer
-        for skill_id in skills:
-            skill = db.query(Skill).filter(Skill.id == skill_id).first()
-            if not skill:
-                raise HTTPException(status_code=400, detail=f"Invalid skill ID: {skill_id}")
+        # Handle skills as names: buscar por nombre o crear si no existe
+        skill_ids = []
 
-            offer_skill = OfferSkill(offerId=new_offer.id, skillId=skill.id)
-            db.add(offer_skill)
+        if skills:
+            for raw in skills:
+                name = (raw or "").strip()
+                if not name:
+                    continue
+
+                # Buscar skill por nombre (case-insensitive)
+                skill = (
+                    db.query(Skill)
+                    .filter(Skill.name.ilike(name))
+                    .first()
+                )
+
+                # Crear skill si no existe
+                if not skill:
+                    skill = Skill(name=name)
+                    db.add(skill)
+                    db.flush()
+
+                skill_ids.append(skill.id)
+
+        # Crear relaciones offer_skill
+        for sid in skill_ids:
+            db.add(OfferSkill(offerId=new_offer.id, skillId=sid))
 
         # Associate the offer with the company
         company_offer = CompanyOffer(offerId=new_offer.id, companyId=offerCompanyId)
