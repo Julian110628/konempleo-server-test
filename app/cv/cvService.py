@@ -26,14 +26,13 @@ pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 # s3_client = boto3.client('s3', aws_access_key_id='your_access_key', aws_secret_access_key='your_secret_key', region_name='your_region')
 
-# AWS S3 Bucket name
-BUCKET_NAME = os.getenv("BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET") or os.getenv("BUCKET_NAME")
+if not S3_BUCKET_NAME:
+    raise RuntimeError("S3 bucket name is not configured. Set AWS_S3_BUCKET or BUCKET_NAME.")
 
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id= os.getenv("AWS_KEY"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_KEY")
-)
+# Usar IAM role (sin keys)
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 openai.api_key =  os.getenv("OAI_KEY")
 
@@ -46,10 +45,10 @@ def upload_to_s3(file: UploadFile, s3_key: str) -> str:
         file.file.seek(0)
 
         # Upload file to S3
-        s3_client.upload_fileobj(file.file, BUCKET_NAME, s3_key)
+        s3_client.upload_fileobj(file.file, S3_BUCKET_NAME, s3_key)
 
         # Construct and return the S3 URL
-        s3_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
+        s3_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
         return s3_url
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload file to S3: {str(e)}")

@@ -1,6 +1,7 @@
 
 import json
 import os
+import os
 import traceback
 from typing import List, Optional
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
@@ -21,7 +22,9 @@ fields_to_update = [
         "name", "sector", "document", "document_type", "city",
         "employees", "activeoffers", "availableoffers", "totaloffers",
         "is_deleted", "active"]
-S3_BUCKET_NAME = os.getenv("BUCKET_NAME")
+S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET") or os.getenv("BUCKET_NAME")
+if not S3_BUCKET_NAME:
+    raise RuntimeError("S3 bucket name is not configured. Set AWS_S3_BUCKET or BUCKET_NAME.")
 
 @companyRouter.post("/company/", status_code=201, response_model=Company)
 def create_company(

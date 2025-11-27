@@ -15,12 +15,9 @@ class ServiceUser(ControllerBase[Users, UserInsert, UserUpdateUser, UserSoftDele
 
 userServices = ServiceUser(Users)
 
-ses_client = boto3.client(
-    'ses',
-    aws_access_key_id= os.getenv("AWS_KEY"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
-    region_name="us-east-2"
-)
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+
+ses_client = boto3.client("ses", region_name=AWS_REGION)
 
 CONFIGURATION_SET = "konempleo-config-set"
 

@@ -83,15 +83,14 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-S3_BUCKET_NAME = os.getenv("BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET") or os.getenv("BUCKET_NAME")
 
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id= os.getenv("AWS_KEY"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
-    region_name="us-east-2",
-    config=Config(signature_version='s3v4'),
-)
+if not S3_BUCKET_NAME:
+    raise RuntimeError("S3 bucket name is not configured. Set AWS_S3_BUCKET or BUCKET_NAME.")
+
+# Use IAM role / environment-provided credentials (do not pass keys explicitly)
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 def generate_presigned_url(object_key: str, expiration: int = 3600) -> str:
     # Infer the file type from the object key
