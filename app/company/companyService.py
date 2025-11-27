@@ -1,23 +1,24 @@
 
 import os
 import uuid
-
+import boto3
 from fastapi import HTTPException, UploadFile
 from db import session
 from app.baseController import ControllerBase
 from app.company.companyDTO import CompanyCreate, CompanyUpdate, CompanySoftDelete
 from cryptography.fernet import Fernet
-import boto3
 
 from models.models import Company
 
-S3_BUCKET_NAME = os.getenv("BUCKET_NAME")
 
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id= os.getenv("AWS_KEY"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_KEY")
-)
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET") or os.getenv("BUCKET_NAME")
+
+if not S3_BUCKET_NAME:
+    raise RuntimeError("S3 bucket name is not configured. Set AWS_S3_BUCKET or BUCKET_NAME.")
+
+# Usar IAM Role (NO pasar keys manualmente)
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 
 class ServiceCompany(ControllerBase[Company, CompanyCreate, CompanyUpdate, CompanySoftDelete]): 
