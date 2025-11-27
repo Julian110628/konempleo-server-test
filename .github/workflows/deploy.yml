@@ -45,8 +45,8 @@ jobs:
           echo SDBASIC_AUTH_TOKEN="$SDBASIC_AUTH_TOKEN" >> app/.env
           echo ACCESS_TOKEN_EXPIRE_MINUTES=1440 >> app/.env
           echo ALGORITHM="HS256" >> app/.env
-          echo SECRET_KEY="84f79fbb77410c4ff2df367a03acc88440c8cce2e5a0271394038e35d9095256" >> app/.env
-          echo BUCKET_NAME="s3-konempleo-dev-001" >> app/.env
+          echo SECRET_KEY="vvdgDFsvxlkL5MnATd+PRwg+0v+HWM633MrMWsFa" >> app/.env
+          echo BUCKET_NAME="konempleo-prod-bucket" >> app/.env
           echo AWS_KEY="$AWS_KEY" >> app/.env
           echo AWS_SECRET_KEY="$AWS_SECRET_KEY" >> app/.env
           echo SDTEMPLATE_ID=4578 >> app/.env
