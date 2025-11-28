@@ -16,7 +16,7 @@ env:
   RDS_HOST: ${{ vars.RDS_HOST }}
   RDS_PORT: ${{ vars.RDS_PORT }}
   RDS_NAME: ${{ vars.RDS_NAME }}
-  OAI_KEY: ${{ vars.OAI_KEY }}
+  OAI_KEY: ${{ secrets.OPENAI_API_KEY }}
   SDUSERNAME: ${{ vars.SDUSERNAME }}
   SDPASSWORD: ${{ vars.SDPASSWORD }}
   AWS_KEY: ${{ vars.AWS_KEY }}
@@ -39,7 +39,7 @@ jobs:
           echo DB_HOST="$RDS_HOST" >> app/.env
           echo DB_PORT=$RDS_PORT >> app/.env
           echo DB_NAME="$RDS_NAME" >> app/.env
-          echo OAI_KEY=$OAI_KEY >> app/.env
+          echo OAI_KEY="$OAI_KEY" >> app/.env
           echo SDUSERNAME="$SDUSERNAME" >> app/.env
           echo SDPASSWORD="$SDPASSWORD" >> app/.env
           echo SDBASIC_AUTH_TOKEN="$SDBASIC_AUTH_TOKEN" >> app/.env
