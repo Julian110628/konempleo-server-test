@@ -22,6 +22,8 @@ env:
   AWS_KEY: ${{ vars.AWS_KEY }}
   AWS_SECRET_KEY: ${{ vars.AWS_SECRET_KEY }}
   SDBASIC_AUTH_TOKEN: ${{ vars.SDBASIC_AUTH_TOKEN }}
+  TUSDATOS_USER: ${{ vars.TUSDATOS_USER }}
+  TUSDATOS_SECRET: ${{ vars.TUSDATOS_SECRET }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -49,9 +51,9 @@ jobs:
           echo BUCKET_NAME="konempleo-prod-bucket" >> app/.env
           echo AWS_KEY="$AWS_KEY" >> app/.env
           echo AWS_SECRET_KEY="$AWS_SECRET_KEY" >> app/.env
-          echo SDTEMPLATE_ID=4578 >> app/.env
-          echo tusDatosUser="Yolanda@konempleo.com" >> app/.env
-          echo tusDatosSecret="Konempleo2022" >> app/.env
+          echo SDTEMPLATE_ID=2199 >> app/.env
+          echo tusDatosUser="$TUSDATOS_USER" >> app/.env
+          echo tusDatosSecret="$TUSDATOS_SECRET" >> app/.env
 
       - name: Set up QEMU for x86_64
         run: |
