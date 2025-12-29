@@ -95,9 +95,9 @@ jobs:
         env:
           PEM_KEY_B64: ${{ secrets.AWS_PEM_KEY_B64 }}
         run: |
-          echo "$PEM_KEY_B64" | base64 -d > konempleo.pem
+          printf "%s" "$PEM_KEY_B64" | base64 -d > konempleo.pem
           chmod 400 konempleo.pem
-          ssh -o StrictHostKeyChecking=no -i konempleo.pem -tt ec2-18-117-3-110.us-east-2.compute.amazonaws.com <<'EOF'
+          ssh -o StrictHostKeyChecking=no -i konempleo.pem ubuntu@ec2-18-117-3-110.us-east-2.compute.amazonaws.com <<'EOF'
           docker stop konempleo
           docker rm konempleo
           docker system prune -a --volumes -f
