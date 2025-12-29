@@ -97,6 +97,7 @@ jobs:
         run: |
           printf "%s" "$PEM_KEY_B64" | base64 -d > konempleo.pem
           chmod 400 konempleo.pem
+          head -n 2 konempleo.pem
           ssh -o StrictHostKeyChecking=no -i konempleo.pem ubuntu@ec2-18-117-3-110.us-east-2.compute.amazonaws.com <<'EOF'
           docker stop konempleo
           docker rm konempleo
