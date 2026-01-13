@@ -3,12 +3,15 @@ import os
 import random
 import string
 import boto3
+import logging
 from fastapi import HTTPException
 from app.baseController import ControllerBase
 from app.user.userDTO import UserInsert, UserSoftDelete, UserUpdateUser
 from botocore.exceptions import BotoCoreError, NoCredentialsError
 
 from models.models import Users
+
+logger = logging.getLogger(__name__)
 
 class ServiceUser(ControllerBase[Users, UserInsert, UserUpdateUser, UserSoftDelete]): 
     ...
@@ -21,6 +24,8 @@ ses_client = boto3.client("ses", region_name=AWS_REGION)
 
 CONFIGURATION_SET = os.getenv("SES_CONFIGURATION_SET", "")
 
+ENABLE_EMAILS = os.getenv("ENABLE_EMAILS", "false").lower() == "true"
+
 def generate_temp_password(length=10):
     """Generates a random alphanumeric password."""
     characters = string.ascii_letters + string.digits
@@ -30,7 +35,7 @@ def send_email_with_temp_password(email: str, temp_password: str):
     """Sends an email using AWS SES with the temporary password."""
     
     # AWS SES Configuration
-    SENDER = "mail@konempleo.ai"  # Change to your verified SES sender email
+    SENDER = "contabilidad@coleoptera.co"  # Change to your verified SES sender email
     CHARSET = "UTF-8"
     SUBJECT = "Bienvenido a KonEmpleo - Su acceso temporal"
 
@@ -95,8 +100,6 @@ def send_email_with_temp_password(email: str, temp_password: str):
     """
 
     try:
-    
-
         email_args = {
             "Source": SENDER,
             "Destination": {"ToAddresses": [email]},
@@ -112,26 +115,24 @@ def send_email_with_temp_password(email: str, temp_password: str):
         if CONFIGURATION_SET:
             email_args["ConfigurationSetName"] = CONFIGURATION_SET
 
-        # Send the email
-        response = ses_client.send_email(**email_args)
+        if ENABLE_EMAILS:
+            response = ses_client.send_email(**email_args)
+            print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
 
-        print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
-
-    except (BotoCoreError, NoCredentialsError) as e:
-        print(f"Failed to send email: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")
+    except Exception as e:
+        logger.error(f"Email failed: {e}")
 
 
 def send_email_with_temp_resetpassword(email: str, temp_password: str):
     """Sends an email using AWS SES with the temporary password."""
     
     # AWS SES Configuration
-    SENDER = "mail@konempleo.ai"  # Change to your verified SES sender email
+    SENDER = "contabilidad@coleoptera.co"  # Change to your verified SES sender email
     CHARSET = "UTF-8"
-    SUBJECT = "Bienvenido a KonEmpleo - Su acceso temporal"
+    SUBJECT = "Bienvenido a DeepTalent.Ai - Su acceso temporal"
 
     BODY_TEXT = f"""
-    ¡Bienvenido a KonEmpleo!
+    ¡Bienvenido a DeepTalent.Ai!
     
     Estimado/a,
 
@@ -143,10 +144,10 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
     
     Haga clic en el siguiente enlace para acceder a su cuenta y actualizar su contraseña:
     
-    https://konempleo.ai/login
+    http://18.117.3.110:8081//login
     
     Atentamente,
-    El equipo de KonEmpleo
+    El equipo de DeepTalent.Ai
     """
 
     BODY_HTML = f"""
@@ -154,7 +155,7 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Bienvenido a KonEmpleo</title>
+        <title>Bienvenido a DeepTalent.Ai</title>
     </head>
     <body>
         <table width="100%" style="background-color: #ffffff; max-width: 600px; margin: auto;">
@@ -171,13 +172,13 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="https://konempleo.ai/login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="http://18.117.3.110:8081//login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
             <tr>
                 <td style="text-align: center; padding: 20px; background-color: #002E5D; color: #ffffff; font-size: 14px;">
-                    &copy; 2025 KonEmpleo. Todos los derechos reservados.
+                    &copy; 2025 DeepTalent.Ai. Todos los derechos reservados.
                 </td>
             </tr>
         </table>
@@ -186,8 +187,6 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
     """
 
     try:
-    
-
         email_args = {
             "Source": SENDER,
             "Destination": {"ToAddresses": [email]},
@@ -203,11 +202,9 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
         if CONFIGURATION_SET:
             email_args["ConfigurationSetName"] = CONFIGURATION_SET
 
-        # Send the email
-        response = ses_client.send_email(**email_args)
+        if ENABLE_EMAILS:
+            response = ses_client.send_email(**email_args)
+            print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
 
-        print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
-
-    except (BotoCoreError, NoCredentialsError) as e:
-        print(f"Failed to send email: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")
+    except Exception as e:
+        logger.error(f"Email failed: {e}")

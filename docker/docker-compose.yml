@@ -41,6 +41,8 @@ services:
       - DB_USER=konempleo
       - DB_PASSWORD=konempleo_pw
 
+      - ENABLE_EMAILS=false
+
       # AWS S3 con IAM Role (sin keys)
       - AWS_REGION=us-east-2
       - AWS_S3_BUCKET=konempleo-prod-bucket
