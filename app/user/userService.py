@@ -37,25 +37,24 @@ def send_email_with_temp_password(email: str, temp_password: str):
     # AWS SES Configuration
     SENDER = "contabilidad@coleoptera.co"  # Change to your verified SES sender email
     CHARSET = "UTF-8"
-    SUBJECT = "Bienvenido a KonEmpleo - Su acceso temporal"
+    SUBJECT = "Bienvenido a DeepTalent.Ai - Su acceso temporal"
 
     BODY_TEXT = f"""
-    ¡Bienvenido a KonEmpleo!
+    ¡Bienvenido a DeepTalent.Ai!
     
     Estimado/a,
 
-    Nos complace darle la bienvenida a KonEmpleo.
-
+    Nos complace darle la bienvenida a DeepTalent.Ai.
     Para comenzar, hemos generado una contraseña temporal para usted:
     
     Contraseña Temporal: {temp_password}
     
     Haga clic en el siguiente enlace para acceder a su cuenta y actualizar su contraseña:
     
-    https://konempleo.ai/login
+    http://18.117.3.110:8081//login
     
     Atentamente,
-    El equipo de KonEmpleo
+    El equipo de DeepTalent.Ai
     """
 
     BODY_HTML = f"""
@@ -63,35 +62,35 @@ def send_email_with_temp_password(email: str, temp_password: str):
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Bienvenido a KonEmpleo</title>
+        <title>Bienvenido a DeepTalent.Ai</title>
     </head>
     <body>
         <table width="100%" style="background-color: #ffffff; max-width: 600px; margin: auto;">
             <tr>
                 <td style="text-align: center; padding: 20px;">
-                    <img src="https://konempleo.ai/_nuxt/ke_logo_dark.D8QroFYK.png" alt="KonEmpleo Logo" style="max-width: 20%; height: auto;">
+                    <img src="https://deeptalent.ai/_nuxt/ke_logo_dark.D8QroFYK.png" alt="DeepTalent.Ai Logo" style="max-width: 20%; height: auto;">
                 </td>
             </tr>
             <tr>
                 <td style="text-align: center; padding: 20px; background-color: #002E5D; color: #ffffff; font-size: 24px; font-weight: bold;">
-                    ¡Bienvenido a KonEmpleo!
+                    ¡Bienvenido a DeepTalent.Ai!
                 </td>
             </tr>
             <tr>
                 <td style="padding: 20px; font-size: 16px; color: #333333;">
                     <p>Estimado/a,</p>
-                    <p>Nos complace darle la bienvenida a KonEmpleo.</p>
+                    <p>Nos complace darle la bienvenida a DeepTalent.Ai.</p>
                     <p>Para comenzar, hemos generado una contraseña temporal para usted:</p>
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="https://konempleo.ai/login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="http://18.117.3.110:8081//login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
             <tr>
                 <td style="text-align: center; padding: 20px; background-color: #002E5D; color: #ffffff; font-size: 14px;">
-                    &copy; 2025 KonEmpleo. Todos los derechos reservados.
+                    &copy; 2025 DeepTalent.Ai. Todos los derechos reservados.
                 </td>
             </tr>
         </table>
