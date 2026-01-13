@@ -153,34 +153,29 @@ def update_offer(
             offer.assigned_cvs = offer_update.assigned_cvs
 
         if offer_update.active is not None:
-            # Allow only transition from active=True to active=False
-            if offer.active and not offer_update.active:
+            if offer.active != offer_update.active:
                 active_status_changed = True
-                offer.active = False
-            elif offer.active != offer_update.active:
-                raise HTTPException(
-                    status_code=400,
-                    detail="The 'active' field can only be updated from True to False."
-                )
+                offer.active = offer_update.active
 
         # Commit the updates to the offer
         db.commit()
 
-        # Update the company's activeoffers if the active status changed
         if active_status_changed:
-            # Fetch the related company directly through the offerCompany table
             company = (
                 db.query(Company)
                 .join(CompanyOffer, CompanyOffer.companyId == Company.id)
                 .filter(
-                    CompanyOffer.offerId == offer_id,  # Match the offer
-                    Company.is_deleted == False        # Exclude deleted companies
+                    CompanyOffer.offerId == offer_id,
+                    Company.is_deleted == False
                 )
                 .first()
             )
 
             if company:
-                company.activeoffers = max(0, company.activeoffers - 1)
+                if offer.active:
+                    company.activeoffers = (company.activeoffers or 0) + 1
+                else:
+                    company.activeoffers = max(0, (company.activeoffers or 0) - 1)
                 db.commit()
 
         # Refresh and return the updated offer
