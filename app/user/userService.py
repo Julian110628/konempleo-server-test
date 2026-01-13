@@ -19,7 +19,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 
 ses_client = boto3.client("ses", region_name=AWS_REGION)
 
-CONFIGURATION_SET = "konempleo-config-set"
+CONFIGURATION_SET = os.getenv("SES_CONFIGURATION_SET", "")
 
 def generate_temp_password(length=10):
     """Generates a random alphanumeric password."""
@@ -97,28 +97,23 @@ def send_email_with_temp_password(email: str, temp_password: str):
     try:
     
 
-        # Send the email
-        response = ses_client.send_email(
-            Destination={"ToAddresses": [email]},
-            Message={
+        email_args = {
+            "Source": SENDER,
+            "Destination": {"ToAddresses": [email]},
+            "Message": {
+                "Subject": {"Data": SUBJECT, "Charset": CHARSET},
                 "Body": {
-                    "Html": {
-                        "Charset": CHARSET,
-                        "Data": BODY_HTML,
-                    },
-                    "Text": {
-                        "Charset": CHARSET,
-                        "Data": BODY_TEXT,
-                    },
-                },
-                "Subject": {
-                    "Charset": CHARSET,
-                    "Data": SUBJECT,
+                    "Html": {"Data": BODY_HTML, "Charset": CHARSET},
+                    "Text": {"Data": BODY_TEXT, "Charset": CHARSET},
                 },
             },
-            Source=SENDER,
-            ConfigurationSetName="konempleo-config-set"
-        )
+        }
+
+        if CONFIGURATION_SET:
+            email_args["ConfigurationSetName"] = CONFIGURATION_SET
+
+        # Send the email
+        response = ses_client.send_email(**email_args)
 
         print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
 
@@ -193,28 +188,23 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
     try:
     
 
-        # Send the email
-        response = ses_client.send_email(
-            Destination={"ToAddresses": [email]},
-            Message={
+        email_args = {
+            "Source": SENDER,
+            "Destination": {"ToAddresses": [email]},
+            "Message": {
+                "Subject": {"Data": SUBJECT, "Charset": CHARSET},
                 "Body": {
-                    "Html": {
-                        "Charset": CHARSET,
-                        "Data": BODY_HTML,
-                    },
-                    "Text": {
-                        "Charset": CHARSET,
-                        "Data": BODY_TEXT,
-                    },
-                },
-                "Subject": {
-                    "Charset": CHARSET,
-                    "Data": SUBJECT,
+                    "Html": {"Data": BODY_HTML, "Charset": CHARSET},
+                    "Text": {"Data": BODY_TEXT, "Charset": CHARSET},
                 },
             },
-            Source=SENDER,
-            ConfigurationSetName="konempleo-config-set"
-        )
+        }
+
+        if CONFIGURATION_SET:
+            email_args["ConfigurationSetName"] = CONFIGURATION_SET
+
+        # Send the email
+        response = ses_client.send_email(**email_args)
 
         print(f"Email sent successfully to {email}. Message ID: {response['MessageId']}")
 

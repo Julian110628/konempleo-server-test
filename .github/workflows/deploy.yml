@@ -51,7 +51,7 @@ jobs:
           echo BUCKET_NAME="konempleo-prod-bucket" >> app/.env
           echo AWS_KEY="$AWS_KEY" >> app/.env
           echo AWS_SECRET_KEY="$AWS_SECRET_KEY" >> app/.env
-          echo SDTEMPLATE_ID=2199 >> app/.env
+          echo SDTEMPLATE_ID=2261 >> app/.env
           echo tusDatosUser="$TUSDATOS_USER" >> app/.env
           echo tusDatosSecret="$TUSDATOS_SECRET" >> app/.env
 
