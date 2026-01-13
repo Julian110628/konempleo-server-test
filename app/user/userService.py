@@ -51,7 +51,7 @@ def send_email_with_temp_password(email: str, temp_password: str):
     
     Haga clic en el siguiente enlace para acceder a su cuenta y actualizar su contraseña:
     
-    http://18.117.3.110:8081//login
+    https://deepvoicelabs.com/login
     
     Atentamente,
     El equipo de DeepTalent.Ai
@@ -68,7 +68,7 @@ def send_email_with_temp_password(email: str, temp_password: str):
         <table width="100%" style="background-color: #ffffff; max-width: 600px; margin: auto;">
             <tr>
                 <td style="text-align: center; padding: 20px;">
-                    <img src="https://deeptalent.ai/_nuxt/ke_logo_dark.D8QroFYK.png" alt="DeepTalent.Ai Logo" style="max-width: 20%; height: auto;">
+                    <img src="https://deepvoicelabs.com/_nuxt/mi_logo_nuevo.png" alt="DeepTalent.Ai Logo" style="max-width: 20%; height: auto;">
                 </td>
             </tr>
             <tr>
@@ -84,7 +84,7 @@ def send_email_with_temp_password(email: str, temp_password: str):
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="http://18.117.3.110:8081//login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="https://deepvoicelabs.com/login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
@@ -143,7 +143,7 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
     
     Haga clic en el siguiente enlace para acceder a su cuenta y actualizar su contraseña:
     
-    http://18.117.3.110:8081//login
+    https://deepvoicelabs.com/login
     
     Atentamente,
     El equipo de DeepTalent.Ai
@@ -160,7 +160,7 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
         <table width="100%" style="background-color: #ffffff; max-width: 600px; margin: auto;">
             <tr>
                 <td style="text-align: center; padding: 20px;">
-                    <img src="https://konempleo.ai/_nuxt/ke_logo_dark.D8QroFYK.png" alt="KonEmpleo Logo" style="max-width: 20%; height: auto;">
+                    <img src="https://deepvoicelabs.com/_nuxt/mi_logo_nuevo.png" alt="DeepTalent.Ai Logo" style="max-width: 20%; height: auto;">
                 </td>
             </tr>
             <tr>
@@ -171,7 +171,7 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="http://18.117.3.110:8081//login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="https://deepvoicelabs.com/login" style="background-color: #002E5D; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
