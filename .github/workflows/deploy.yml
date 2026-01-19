@@ -92,43 +92,48 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_BACKEND_IMAGE:latest
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_PEM_KEY_B64 }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ vars.EC2_HOST }} >> ~/.ssh/known_hosts
+
       - name: Deploy backend to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
+          ssh ubuntu@${{ vars.EC2_HOST }} << EOF
             set -e
 
-            # 1) Crear/actualizar archivo env en EC2
-            cat > /home/ubuntu/konempleo.env << EOT
-          SDUSERNAME=${{ vars.SDUSERNAME }}
-          SDPASSWORD=${{ vars.SDPASSWORD }}
-          SDBASIC_AUTH_TOKEN=${{ vars.SDBASIC_AUTH_TOKEN }}
+            # Detecta la red docker donde está el reverse-proxy (para que Nginx siga viendo "backend")
+            NET=\$(docker inspect -f '{{range \$k,\$v := .NetworkSettings.Networks}}{{println \$k}}{{end}}' reverse-proxy | head -n 1)
 
-          TUSDATOS_USER=${{ vars.TUSDATOS_USER }}
-          TUSDATOS_SECRET=${{ vars.TUSDATOS_SECRET }}
+            # 1) Crear /home/ubuntu/konempleo.env SIN espacios al inicio
+            sudo bash -lc 'printf "%s\n" \
+          "SDUSERNAME=${{ vars.SDUSERNAME }}" \
+          "SDPASSWORD=${{ vars.SDPASSWORD }}" \
+          "SDBASIC_AUTH_TOKEN=${{ vars.SDBASIC_AUTH_TOKEN }}" \
+          "TUSDATOS_USER=${{ vars.TUSDATOS_USER }}" \
+          "TUSDATOS_SECRET=${{ vars.TUSDATOS_SECRET }}" \
+          "AWS_KEY=${{ vars.AWS_KEY }}" \
+          "AWS_SECRET_KEY=${{ vars.AWS_SECRET_KEY }}" \
+          "OAI_KEY=${{ vars.OAI_KEY }}" \
+          "DATABASE_URL=${{ vars.DATABASE_URL }}" \
+          > /home/ubuntu/konempleo.env'
 
-          # Si tu app usa OpenAI / AWS desde env:
-          OAI_KEY=${{ vars.OAI_KEY }}
-          AWS_KEY=${{ vars.AWS_KEY }}
-          AWS_SECRET_KEY=${{ vars.AWS_SECRET_KEY }}
+            sudo chmod 600 /home/ubuntu/konempleo.env
 
-          # Si tu app espera DATABASE_URL (tu Postgres local en Docker/servidor):
-          DATABASE_URL=${{ vars.DATABASE_URL }}
-          EOT
-
-            chmod 600 /home/ubuntu/konempleo.env
-
-            # 2) Bajar contenedor anterior (si existe)
+            # 2) Reemplazar contenedor
             sudo docker stop backend || true
             sudo docker rm backend || true
 
-            # 3) Ejecutar el backend con env-file
+            # 3) Correr backend EN LA MISMA RED que el reverse-proxy
             sudo docker run -d \
               --name backend \
+              --network "\$NET" \
               --env-file /home/ubuntu/konempleo.env \
               --restart unless-stopped \
-              ${{ vars.BACKEND_EXTRA_DOCKER_ARGS }} \
               ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_DEFAULT_REGION }}.amazonaws.com/${{ vars.ECR_BACKEND_IMAGE }}:latest
 
-            # 4) Verificación rápida (no imprime valores, solo nombres)
-            sudo docker exec backend sh -lc 'printenv | grep -E "SDUSERNAME|SDPASSWORD|SDBASIC_AUTH_TOKEN" || true'
+            # 4) Verifica que existan (sin mostrar valores)
+            sudo docker exec backend sh -lc 'echo SDUSERNAME=\${SDUSERNAME:+SET}; echo SDPASSWORD=\${SDPASSWORD:+SET}; echo SDBASIC_AUTH_TOKEN=\${SDBASIC_AUTH_TOKEN:+SET}'
           EOF
