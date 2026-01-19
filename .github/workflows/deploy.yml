@@ -104,36 +104,47 @@ jobs:
           ssh ubuntu@${{ vars.EC2_HOST }} << EOF
             set -e
 
-            # Detecta la red docker donde está el reverse-proxy (para que Nginx siga viendo "backend")
-            NET=\$(docker inspect -f '{{range \$k,\$v := .NetworkSettings.Networks}}{{println \$k}}{{end}}' reverse-proxy | head -n 1)
+            # Red docker del reverse-proxy (para que siga resolviendo "backend")
+            NET=\$(sudo docker inspect -f '{{range \$k,\$v := .NetworkSettings.Networks}}{{println \$k}}{{end}}' reverse-proxy | head -n 1)
 
-            # 1) Crear /home/ubuntu/konempleo.env SIN espacios al inicio
+            if [ -z "\$NET" ]; then
+              echo "ERROR: No pude detectar la red docker de reverse-proxy"
+              sudo docker ps
+              exit 1
+            fi
+
+            # Crear env file
             sudo bash -lc 'printf "%s\n" \
           "SDUSERNAME=${{ vars.SDUSERNAME }}" \
           "SDPASSWORD=${{ vars.SDPASSWORD }}" \
           "SDBASIC_AUTH_TOKEN=${{ vars.SDBASIC_AUTH_TOKEN }}" \
-          "TUSDATOS_USER=${{ vars.TUSDATOS_USER }}" \
-          "TUSDATOS_SECRET=${{ vars.TUSDATOS_SECRET }}" \
-          "AWS_KEY=${{ vars.AWS_KEY }}" \
-          "AWS_SECRET_KEY=${{ vars.AWS_SECRET_KEY }}" \
-          "OAI_KEY=${{ vars.OAI_KEY }}" \
-          "DATABASE_URL=${{ vars.DATABASE_URL }}" \
+          "tusDatosUser=${{ vars.TUSDATOS_USER }}" \
+          "tusDatosSecret=${{ vars.TUSDATOS_SECRET }}" \
+          "DB_USER=${{ vars.RDS_USER }}" \
+          "DB_PASSWORD=${{ vars.RDS_PASSWORD }}" \
+          "DB_HOST=${{ vars.RDS_HOST }}" \
+          "DB_PORT=${{ vars.RDS_PORT }}" \
+          "DB_NAME=${{ vars.RDS_NAME }}" \
+          "SECRET_KEY=${{ vars.SECRET_KEY }}" \
+          "ALGORITHM=${{ vars.ALGORITHM }}" \
+          "ACCESS_TOKEN_EXPIRE_MINUTES=${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}" \
+          "OAI_KEY=${{ secrets.OPENAI_API_KEY }}" \
+          "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
+          "AWS_REGION=${{ vars.AWS_DEFAULT_REGION }}" \
+          "AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }}" \
+          "BUCKET_NAME=${{ vars.BUCKET_NAME }}" \
+          "ENABLE_EMAILS=${{ vars.ENABLE_EMAILS }}" \
+          "SES_CONFIGURATION_SET=${{ vars.SES_CONFIGURATION_SET }}" \
           > /home/ubuntu/konempleo.env'
-
             sudo chmod 600 /home/ubuntu/konempleo.env
 
-            # 2) Reemplazar contenedor
             sudo docker stop backend || true
             sudo docker rm backend || true
 
-            # 3) Correr backend EN LA MISMA RED que el reverse-proxy
             sudo docker run -d \
               --name backend \
               --network "\$NET" \
               --env-file /home/ubuntu/konempleo.env \
               --restart unless-stopped \
               ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_DEFAULT_REGION }}.amazonaws.com/${{ vars.ECR_BACKEND_IMAGE }}:latest
-
-            # 4) Verifica que existan (sin mostrar valores)
-            sudo docker exec backend sh -lc 'echo SDUSERNAME=\${SDUSERNAME:+SET}; echo SDPASSWORD=\${SDPASSWORD:+SET}; echo SDBASIC_AUTH_TOKEN=\${SDBASIC_AUTH_TOKEN:+SET}'
           EOF
