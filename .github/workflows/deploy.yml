@@ -92,22 +92,43 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_BACKEND_IMAGE:latest
 
-      - name: Deploy to EC2 instance via SSH
-        env:
-          PEM_KEY_B64: ${{ secrets.AWS_PEM_KEY_B64 }}
+      - name: Deploy backend to EC2
         run: |
-          printf "%s" "$PEM_KEY_B64" | base64 -d > konempleo.pem
-          chmod 400 konempleo.pem
-          head -n 2 konempleo.pem
-          ssh -o StrictHostKeyChecking=no -i konempleo.pem ubuntu@ec2-18-117-3-110.us-east-2.compute.amazonaws.com <<'EOF'
-          docker stop konempleo
-          docker rm konempleo
-          docker system prune -a --volumes -f
-          aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-          echo "Pulling docker"
-          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_BACKEND_IMAGE:latest
-          echo "Running docker"
-          docker run -d --name konempleo -p 8000:8000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_BACKEND_IMAGE:latest
-          echo "Docker running"
-          exit
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
+            set -e
+
+            # 1) Crear/actualizar archivo env en EC2
+            cat > /home/ubuntu/konempleo.env << EOT
+          SDUSERNAME=${{ vars.SDUSERNAME }}
+          SDPASSWORD=${{ vars.SDPASSWORD }}
+          SDBASIC_AUTH_TOKEN=${{ vars.SDBASIC_AUTH_TOKEN }}
+
+          TUSDATOS_USER=${{ vars.TUSDATOS_USER }}
+          TUSDATOS_SECRET=${{ vars.TUSDATOS_SECRET }}
+
+          # Si tu app usa OpenAI / AWS desde env:
+          OAI_KEY=${{ vars.OAI_KEY }}
+          AWS_KEY=${{ vars.AWS_KEY }}
+          AWS_SECRET_KEY=${{ vars.AWS_SECRET_KEY }}
+
+          # Si tu app espera DATABASE_URL (tu Postgres local en Docker/servidor):
+          DATABASE_URL=${{ vars.DATABASE_URL }}
+          EOT
+
+            chmod 600 /home/ubuntu/konempleo.env
+
+            # 2) Bajar contenedor anterior (si existe)
+            sudo docker stop backend || true
+            sudo docker rm backend || true
+
+            # 3) Ejecutar el backend con env-file
+            sudo docker run -d \
+              --name backend \
+              --env-file /home/ubuntu/konempleo.env \
+              --restart unless-stopped \
+              ${{ vars.BACKEND_EXTRA_DOCKER_ARGS }} \
+              ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_DEFAULT_REGION }}.amazonaws.com/${{ vars.ECR_BACKEND_IMAGE }}:latest
+
+            # 4) Verificación rápida (no imprime valores, solo nombres)
+            sudo docker exec backend sh -lc 'printenv | grep -E "SDUSERNAME|SDPASSWORD|SDBASIC_AUTH_TOKEN" || true'
           EOF
