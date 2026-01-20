@@ -137,9 +137,13 @@ jobs:
           "SES_CONFIGURATION_SET=${{ vars.SES_CONFIGURATION_SET }}" \
           > /home/ubuntu/konempleo.env'
             sudo chmod 600 /home/ubuntu/konempleo.env
-
+            
             sudo docker stop backend || true
             sudo docker rm backend || true
+
+            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}"
+            echo "AWS_DEFAULT_REGION=${{ vars.AWS_DEFAULT_REGION }}"
+            echo "ECR_BACKEND_IMAGE=${{ vars.ECR_BACKEND_IMAGE }}"
 
             sudo docker run -d \
               --name backend \
@@ -148,3 +152,4 @@ jobs:
               --restart unless-stopped \
               ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_DEFAULT_REGION }}.amazonaws.com/${{ vars.ECR_BACKEND_IMAGE }}:latest
           EOF
+
