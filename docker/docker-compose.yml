@@ -43,18 +43,9 @@ services:
     container_name: backend
 
     env_file:
-      - ../app/.env
+      - /home/ubuntu/konempleo.env
 
     environment:
-      - DATABASE_URL=postgresql://konempleo:konempleo_pw@db:5432/konempleo
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=konempleo
-      - DB_USER=konempleo
-      - DB_PASSWORD=konempleo_pw
-
-      - ENABLE_EMAILS=false
-
       # AWS S3 con IAM Role (sin keys)
       - AWS_REGION=us-east-2
       - AWS_S3_BUCKET=konempleo-prod-bucket
