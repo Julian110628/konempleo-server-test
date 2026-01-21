@@ -45,12 +45,6 @@ services:
     env_file:
       - /home/ubuntu/konempleo.env
 
-    environment:
-      # AWS S3 con IAM Role (sin keys)
-      - AWS_REGION=us-east-2
-      - AWS_S3_BUCKET=konempleo-prod-bucket
-      - AWS_S3_PRESIGN_EXPIRATION=900
-
     depends_on:
       - db
     expose:
