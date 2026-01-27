@@ -26,7 +26,9 @@ CONFIGURATION_SET = os.getenv("SES_CONFIGURATION_SET", "")
 
 ENABLE_EMAILS = os.getenv("ENABLE_EMAILS", "false").lower() == "true"
 
-EMAIL_LOGO_URL = os.getenv("EMAIL_LOGO_URL", "https://deepvoicelabs.com/logo-deeptalent.png")
+EMAIL_LOGO_URL = os.getenv("EMAIL_LOGO_URL", "https://deepvoicelabs.com/mi_logo_nuevo.png")
+
+EMAIL_ACCENT_COLOR = "#000000"
 
 def generate_temp_password(length=10):
     """Generates a random alphanumeric password."""
@@ -74,7 +76,7 @@ def send_email_with_temp_password(email: str, temp_password: str):
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center; padding: 20px; background-color: #000000; color: #ffffff; font-size: 24px; font-weight: bold;">
+                <td style="text-align: center; padding: 20px; background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; font-size: 24px; font-weight: bold;">
                     ¡Bienvenido a DeepTalent.Ai!
                 </td>
             </tr>
@@ -86,12 +88,12 @@ def send_email_with_temp_password(email: str, temp_password: str):
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="https://deepvoicelabs.com/login" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="https://deepvoicelabs.com/login" style="background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center; padding: 20px; background-color: #000000; color: #ffffff; font-size: 14px;">
+                <td style="text-align: center; padding: 20px; background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; font-size: 14px;">
                     &copy; 2025 DeepTalent.Ai. Todos los derechos reservados.
                 </td>
             </tr>
@@ -166,6 +168,11 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
                 </td>
             </tr>
             <tr>
+                <td style="text-align: center; padding: 20px; background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; font-size: 24px; font-weight: bold;">
+                    ¡Bienvenido a DeepTalent.Ai!
+                </td>
+            </tr>
+            <tr>
                 <td style="padding: 20px; font-size: 16px; color: #333333;">
                     <p>Estimado/a,</p>
                     <p>Has solicitado reestablecer tu contraseña.</p>
@@ -173,12 +180,12 @@ def send_email_with_temp_resetpassword(email: str, temp_password: str):
                     <p style="text-align: center; font-weight: bold; font-size: 18px;">{temp_password}</p>
                     <p>Haga clic en el botón a continuación para acceder a su cuenta y actualizar su contraseña:</p>
                     <p style="text-align: center;">
-                        <a href="https://deepvoicelabs.com/login" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
+                        <a href="https://deepvoicelabs.com/login" style="background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px;">Actualizar Contraseña</a>
                     </p>
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center; padding: 20px; background-color: #000000; color: #ffffff; font-size: 14px;">
+                <td style="text-align: center; padding: 20px; background-color: {EMAIL_ACCENT_COLOR} !important; color: #ffffff; font-size: 14px;">
                     &copy; 2025 DeepTalent.Ai. Todos los derechos reservados.
                 </td>
             </tr>
