@@ -20,8 +20,6 @@ env:
   OAI_KEY: ${{ secrets.OPENAI_API_KEY }}
   SDUSERNAME: ${{ vars.SDUSERNAME }}
   SDPASSWORD: ${{ vars.SDPASSWORD }}
-  AWS_KEY: ${{ vars.AWS_KEY }}
-  AWS_SECRET_KEY: ${{ vars.AWS_SECRET_KEY }}
   SDBASIC_AUTH_TOKEN: ${{ vars.SDBASIC_AUTH_TOKEN }}
   TUSDATOS_USER: ${{ vars.TUSDATOS_USER }}
   TUSDATOS_SECRET: ${{ vars.TUSDATOS_SECRET }}
@@ -46,13 +44,13 @@ jobs:
           echo SDUSERNAME="$SDUSERNAME" >> app/.env
           echo SDPASSWORD="$SDPASSWORD" >> app/.env
           echo SDBASIC_AUTH_TOKEN="$SDBASIC_AUTH_TOKEN" >> app/.env
-          echo ACCESS_TOKEN_EXPIRE_MINUTES=1440 >> app/.env
-          echo ALGORITHM="HS256" >> app/.env
-          echo SECRET_KEY="vvdgDFsvxlkL5MnATd+PRwg+0v+HWM633MrMWsFa" >> app/.env
-          echo BUCKET_NAME="konempleo-prod-bucket" >> app/.env
-          echo AWS_KEY="$AWS_KEY" >> app/.env
-          echo AWS_SECRET_KEY="$AWS_SECRET_KEY" >> app/.env
-          echo SDTEMPLATE_ID=4578 >> app/.env
+          echo ACCESS_TOKEN_EXPIRE_MINUTES="${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> app/.env
+          echo ALGORITHM="${{ vars.ALGORITHM }}" >> app/.env
+          echo SECRET_KEY="${{ vars.SECRET_KEY }}" >> app/.env
+          echo BUCKET_NAME="${{ vars.BUCKET_NAME }}" >> app/.env
+          echo AWS_KEY="${{ secrets.AWS_ACCESS_KEY_ID }}" >> app/.env
+          echo AWS_SECRET_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> app/.env
+          echo SDTEMPLATE_ID="${{ vars.SDTEMPLATE_ID }}" >> app/.env
           echo tusDatosUser="$TUSDATOS_USER" >> app/.env
           echo tusDatosSecret="$TUSDATOS_SECRET" >> app/.env
 
@@ -130,9 +128,12 @@ jobs:
           "ACCESS_TOKEN_EXPIRE_MINUTES=${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}" \
           "OAI_KEY=${{ secrets.OPENAI_API_KEY }}" \
           "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
+          "AWS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
           "AWS_REGION=${{ vars.AWS_DEFAULT_REGION }}" \
           "AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }}" \
           "BUCKET_NAME=${{ vars.BUCKET_NAME }}" \
+          "SDTEMPLATE_ID=${{ vars.SDTEMPLATE_ID }}" \
           "ENABLE_EMAILS=${{ vars.ENABLE_EMAILS }}" \
           "SES_CONFIGURATION_SET=${{ vars.SES_CONFIGURATION_SET }}" \
           > /home/ubuntu/konempleo.env'
